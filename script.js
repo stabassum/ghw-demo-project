@@ -3,6 +3,39 @@
 
   var STORAGE_KEY = "portfolio-guestbook-comments";
 
+  /**
+   * Pure validation: reject empty name or comment.
+   * @param {{ name?: string, comment?: string }} data
+   * @returns {{ valid: boolean, errors: string[] }}
+   */
+  function validateComment(data) {
+    var errors = [];
+    var name = data && typeof data.name === "string" ? data.name.trim() : "";
+    var comment =
+      data && typeof data.comment === "string" ? data.comment.trim() : "";
+
+    if (!name) {
+      errors.push("Name is required.");
+    }
+    if (!comment) {
+      errors.push("Comment is required.");
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors: errors,
+    };
+  }
+
+  function escapeHTML(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   function getComments() {
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
@@ -14,7 +47,17 @@
     }
   }
 
-  function saveComments(comments) {
+  /**
+   * Persist a single comment (newest first) under one localStorage key.
+   * @param {{ name: string, comment: string, createdAt?: number }} comment
+   */
+  function saveComment(comment) {
+    var comments = getComments();
+    comments.unshift({
+      name: comment.name,
+      comment: comment.comment,
+      createdAt: comment.createdAt || Date.now(),
+    });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(comments));
   }
 
@@ -28,10 +71,13 @@
     }
   }
 
+  /**
+   * Draw comments newest-first. User text is escaped before any HTML insert.
+   */
   function renderComments() {
     var list = document.getElementById("comments-list");
     var empty = document.getElementById("comments-empty");
-    if (!list || !empty) return;
+    if (!list) return;
 
     var comments = getComments();
 
@@ -40,26 +86,28 @@
     }
 
     if (comments.length === 0) {
-      empty.hidden = false;
+      if (empty) empty.hidden = false;
       return;
     }
 
-    empty.hidden = true;
+    if (empty) empty.hidden = true;
 
     comments.forEach(function (item) {
+      var name = item.name || "";
+      var body = item.comment != null ? item.comment : item.body || "";
+
       var li = document.createElement("li");
-      li.className = "comment-item";
+      li.className = "comment-card";
 
-      var author = document.createElement("p");
-      author.className = "comment-author";
-      author.textContent = item.name;
+      // Only escaped strings are ever passed into innerHTML — never raw input.
+      li.innerHTML =
+        '<p class="comment-author">' +
+        escapeHTML(name) +
+        "</p>" +
+        '<p class="comment-body">' +
+        escapeHTML(body) +
+        "</p>";
 
-      var body = document.createElement("p");
-      body.className = "comment-body";
-      body.textContent = item.body;
-
-      li.appendChild(author);
-      li.appendChild(body);
       list.appendChild(li);
     });
   }
@@ -77,26 +125,26 @@
     form.addEventListener("submit", function (event) {
       event.preventDefault();
 
-      var name = nameInput.value.trim();
-      var body = bodyInput.value.trim();
+      var data = {
+        name: nameInput.value,
+        comment: bodyInput.value,
+      };
 
-      if (!name || !body) {
-        setStatus(status, "Please enter both a name and a comment.", true);
+      var result = validateComment(data);
+      if (!result.valid) {
+        setStatus(status, result.errors.join(" "), true);
         return;
       }
 
-      var comments = getComments();
-      comments.unshift({
-        name: name,
-        body: body,
+      saveComment({
+        name: data.name.trim(),
+        comment: data.comment.trim(),
         createdAt: Date.now(),
       });
-      saveComments(comments);
 
-      nameInput.value = "";
-      bodyInput.value = "";
-      setStatus(status, "Comment saved in this browser.", false);
       renderComments();
+      form.reset();
+      setStatus(status, "Comment saved in this browser.", false);
     });
   }
 
@@ -129,6 +177,13 @@
       );
     });
   }
+
+  // Expose for optional test runners / debugging without a bundler.
+  window.validateComment = validateComment;
+  window.escapeHTML = escapeHTML;
+  window.getComments = getComments;
+  window.saveComment = saveComment;
+  window.renderComments = renderComments;
 
   document.addEventListener("DOMContentLoaded", function () {
     initGuestbook();

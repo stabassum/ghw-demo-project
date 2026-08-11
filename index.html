@@ -144,8 +144,8 @@
         <p class="section-label">Guestbook</p>
         <h2 class="section-title">Leave a comment</h2>
         <p class="form-note">
-          Comments are saved in your browser only — they won't be visible to
-          other visitors. This is a demo, not a shared public comment system.
+          Comments are saved in this browser only and aren't visible to other
+          visitors.
         </p>
 
         <form class="form-panel" id="comment-form" novalidate>
@@ -170,13 +170,20 @@
             ></textarea>
           </div>
           <button type="submit" class="btn">Post Comment</button>
-          <p class="form-status" id="comment-status" role="status" aria-live="polite"></p>
+          <p
+            class="form-status"
+            id="comment-status"
+            role="status"
+            aria-live="polite"
+          ></p>
         </form>
 
-        <ul class="comments-list" id="comments-list" aria-live="polite"></ul>
-        <p class="comments-empty" id="comments-empty" hidden>
-          No comments yet — be the first to leave one.
-        </p>
+        <div class="comments-container" id="comments-container">
+          <ul class="comments-list" id="comments-list"></ul>
+          <p class="comments-empty" id="comments-empty" hidden>
+            No comments yet — be the first to leave one.
+          </p>
+        </div>
       </section>
 
       <!-- 6. Contact -->
