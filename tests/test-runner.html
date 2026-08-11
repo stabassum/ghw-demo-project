@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio test runner</title>
+    <style>
+      :root {
+        --bg: #0a0a0b;
+        --text: #f4f4f5;
+        --muted: #a1a1aa;
+        --pass: #4ade80;
+        --fail: #f87171;
+        --panel: #141416;
+      }
+
+      body {
+        margin: 0;
+        padding: 2rem 1.5rem 3rem;
+        font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+
+      h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.5rem;
+      }
+
+      .summary {
+        margin: 0 0 1.5rem;
+        color: var(--muted);
+      }
+
+      #results {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-width: 42rem;
+      }
+
+      #results li {
+        padding: 0.65rem 0.9rem;
+        border-radius: 8px;
+        background: var(--panel);
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 0.85rem;
+      }
+
+      #results li.pass {
+        color: var(--pass);
+        border-left: 3px solid var(--pass);
+      }
+
+      #results li.fail {
+        color: var(--fail);
+        border-left: 3px solid var(--fail);
+      }
+
+      iframe {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border: 0;
+        visibility: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Portfolio test runner</h1>
+    <p class="summary" id="summary">Running…</p>
+    <ul id="results"></ul>
+
+    <!-- Fixture DOM for renderComments (mirrors portfolio markup) -->
+    <div id="comments-container" hidden>
+      <ul class="comments-list" id="comments-list"></ul>
+      <p class="comments-empty" id="comments-empty" hidden></p>
+    </div>
+
+    <!-- Real site DOM for nav/section assertions -->
+    <iframe id="site-frame" src="../index.html" title="Portfolio under test"></iframe>
+
+    <script src="../script.js"></script>
+    <script>
+      (function () {
+        "use strict";
+
+        var STORAGE_KEY = "portfolio-guestbook-comments";
+        var results = document.getElementById("results");
+        var summary = document.getElementById("summary");
+        var passed = 0;
+        var failed = 0;
+
+        function assert(condition, label) {
+          var li = document.createElement("li");
+          if (condition) {
+            passed += 1;
+            li.className = "pass";
+            li.textContent = "PASS — " + label;
+          } else {
+            failed += 1;
+            li.className = "fail";
+            li.textContent = "FAIL — " + label;
+          }
+          results.appendChild(li);
+          return !!condition;
+        }
+
+        function updateSummary() {
+          summary.textContent =
+            passed +
+            " passed, " +
+            failed +
+            " failed (" +
+            (passed + failed) +
+            " total)";
+        }
+
+        function runContactValidationTests() {
+          assert(
+            typeof window.validateContact === "function",
+            "validateContact is available"
+          );
+
+          var emptyResult = window.validateContact({});
+          assert(
+            emptyResult && emptyResult.valid === false,
+            "validateContact rejects an empty submission object"
+          );
+
+          var invalidResult = window.validateContact({
+            name: "   ",
+            email: "not-an-email",
+            message: "",
+          });
+          assert(
+            invalidResult && invalidResult.valid === false,
+            "validateContact rejects an invalid submission object"
+          );
+
+          var validResult = window.validateContact({
+            name: "Sumaiya",
+            email: "sumaiya@example.com",
+            message: "Hello — let's collaborate.",
+          });
+          assert(
+            validResult && validResult.valid === true,
+            "validateContact accepts a valid submission object"
+          );
+        }
+
+        function runCommentFeatureTests() {
+          assert(
+            typeof window.validateComment === "function",
+            "validateComment is available"
+          );
+
+          var bothEmpty = window.validateComment({ name: "", comment: "" });
+          assert(
+            bothEmpty && bothEmpty.valid === false,
+            "validateComment rejects a submission with an empty name and empty comment"
+          );
+
+          var nameOnly = window.validateComment({
+            name: "Alex",
+            comment: "",
+          });
+          assert(
+            nameOnly && nameOnly.valid === false,
+            "validateComment rejects a submission with a name but no comment"
+          );
+
+          var commentOnly = window.validateComment({
+            name: "",
+            comment: "Nice portfolio!",
+          });
+          assert(
+            commentOnly && commentOnly.valid === false,
+            "validateComment rejects a submission with a comment but no name"
+          );
+
+          var bothValid = window.validateComment({
+            name: "Alex",
+            comment: "Nice portfolio!",
+          });
+          assert(
+            bothValid && bothValid.valid === true,
+            "validateComment accepts a submission with both a valid name and comment"
+          );
+
+          localStorage.removeItem(STORAGE_KEY);
+          var initial = window.getComments();
+          assert(
+            Array.isArray(initial) && initial.length === 0,
+            "getComments returns an empty array when no comments are stored yet"
+          );
+
+          var beforeSave = window.getComments().length;
+          window.saveComment({
+            name: "Alex",
+            comment: "Nice portfolio!",
+          });
+          var afterSave = window.getComments();
+          assert(
+            afterSave.length === beforeSave + 1,
+            "saveComment persists a comment so getComments' length increases by exactly one"
+          );
+
+          window.renderComments();
+          var cards = document.querySelectorAll(
+            "#comments-container .comment-card"
+          );
+          assert(
+            cards.length === 1,
+            "renderComments draws exactly one .comment-card into the comments container after one comment is saved"
+          );
+
+          var rawScriptTag = "<" + "script>alert(1)</" + "script>";
+          var escaped = window.escapeHTML(rawScriptTag);
+          assert(
+            typeof escaped === "string" && escaped.indexOf("<script") === -1,
+            "escapeHTML neutralizes a raw <script> tag (output has no literal <script substring)"
+          );
+
+          // Keep storage clean for later runs / the iframe site.
+          localStorage.removeItem(STORAGE_KEY);
+        }
+
+        function runNavSectionTests(doc) {
+          var navLinks = doc.querySelectorAll('.nav-links a[href^="#"]');
+          var sections = doc.querySelectorAll("main section[id]");
+
+          assert(
+            navLinks.length === sections.length,
+            "nav link count (" +
+              navLinks.length +
+              ") matches section count (" +
+              sections.length +
+              ")"
+          );
+
+          Array.prototype.forEach.call(navLinks, function (link) {
+            var href = link.getAttribute("href") || "";
+            var id = href.charAt(0) === "#" ? href.slice(1) : "";
+            var section = id ? doc.getElementById(id) : null;
+            assert(
+              !!section,
+              'nav href "' + href + '" matches an existing section id'
+            );
+          });
+        }
+
+        runContactValidationTests();
+        runCommentFeatureTests();
+        updateSummary();
+
+        var frame = document.getElementById("site-frame");
+        var domTestsRan = false;
+
+        function finishWithDom(doc) {
+          if (domTestsRan) return;
+          domTestsRan = true;
+
+          if (!doc || !doc.querySelector) {
+            assert(false, "could not load index.html for nav/section tests");
+            updateSummary();
+            return;
+          }
+          runNavSectionTests(doc);
+          updateSummary();
+        }
+
+        frame.addEventListener("load", function () {
+          try {
+            finishWithDom(frame.contentDocument);
+          } catch (err) {
+            if (domTestsRan) return;
+            domTestsRan = true;
+            assert(
+              false,
+              "could not read index.html iframe (open via a local server if file:// is blocked)"
+            );
+            updateSummary();
+          }
+        });
+
+        // Fallback if iframe already loaded (cached)
+        if (
+          frame.contentDocument &&
+          frame.contentDocument.readyState === "complete" &&
+          frame.contentDocument.querySelector(".nav-links")
+        ) {
+          finishWithDom(frame.contentDocument);
+        }
+      })();
+    </script>
+  </body>
+</html>

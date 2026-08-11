@@ -148,6 +148,36 @@
     });
   }
 
+  /**
+   * Pure validation for the contact form.
+   * @param {{ name?: string, email?: string, message?: string }} data
+   * @returns {{ valid: boolean, errors: string[] }}
+   */
+  function validateContact(data) {
+    var errors = [];
+    var name = data && typeof data.name === "string" ? data.name.trim() : "";
+    var email = data && typeof data.email === "string" ? data.email.trim() : "";
+    var message =
+      data && typeof data.message === "string" ? data.message.trim() : "";
+
+    if (!name) {
+      errors.push("Name is required.");
+    }
+    if (!email) {
+      errors.push("Email is required.");
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push("Email is invalid.");
+    }
+    if (!message) {
+      errors.push("Message is required.");
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors: errors,
+    };
+  }
+
   function initContactForm() {
     var form = document.getElementById("contact-form");
     var nameInput = document.getElementById("contact-name");
@@ -160,12 +190,15 @@
     form.addEventListener("submit", function (event) {
       event.preventDefault();
 
-      var name = nameInput.value.trim();
-      var email = emailInput.value.trim();
-      var message = messageInput.value.trim();
+      var data = {
+        name: nameInput.value,
+        email: emailInput.value,
+        message: messageInput.value,
+      };
 
-      if (!name || !email || !message) {
-        setStatus(status, "Please fill in name, email, and message.", true);
+      var result = validateContact(data);
+      if (!result.valid) {
+        setStatus(status, result.errors.join(" "), true);
         return;
       }
 
@@ -180,6 +213,7 @@
 
   // Expose for optional test runners / debugging without a bundler.
   window.validateComment = validateComment;
+  window.validateContact = validateContact;
   window.escapeHTML = escapeHTML;
   window.getComments = getComments;
   window.saveComment = saveComment;
