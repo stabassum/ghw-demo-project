@@ -1,0 +1,18 @@
+---
+description: Refuse frameworks and CDNs — vanilla HTML/CSS/JS only, zero build step
+alwaysApply: true
+---
+
+# No Frameworks
+
+## Hard constraint
+
+If asked to add **React**, **Vue**, **Tailwind**, **Bootstrap**, or any CDN framework:
+
+1. **Refuse** the request
+2. **Propose the vanilla equivalent** instead (plain HTML, CSS, and JavaScript)
+
+## Runtime requirements
+
+- The project must run by opening `index.html` directly **or** via GitHub Pages
+- **Zero build step** — no bundlers, compilers, or package managers required to view or deploy

@@ -1,0 +1,31 @@
+---
+description: Comments section rules — localStorage-only, validation, and XSS-safe rendering
+alwaysApply: true
+---
+
+# Comment Demo
+
+## Access
+
+- The Comments section is open to any visitor
+- No login required
+
+## Storage
+
+- Comments are stored in the visitor's own browser via `localStorage` only
+- There is no backend or database
+- Comments are **not** shared across visitors or devices
+
+## Form validation
+
+- Require both a **name** and a **comment body**
+- Reject empty submission of either field
+
+## Rendering safety
+
+- Escape/sanitize submitted text before rendering it back into the page
+- **Never** insert raw user input via `innerHTML`
+
+## UI note
+
+- Include a visible note stating that comments are local to each browser

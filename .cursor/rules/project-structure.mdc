@@ -1,0 +1,33 @@
+---
+description: Static site project structure — allowed files, sections, and sticky nav
+alwaysApply: true
+---
+
+# Project Structure
+
+This is a **static site only**. Keep the file set minimal and predictable.
+
+## Allowed files
+
+- `index.html`
+- `style.css`
+- `script.js`
+
+## Hard constraints
+
+- No build tools, bundlers, npm packages, or frameworks
+- No `package.json` unless explicitly requested
+- All JavaScript must run unmodified via a plain `<script>` tag
+
+## `index.html` sections (in order)
+
+1. Hero
+2. About
+3. Projects
+4. Skills
+5. Contact
+
+## Navigation
+
+- Nav must be sticky
+- Links must target: `#about`, `#projects`, `#skills`, `#contact`

@@ -1,0 +1,36 @@
+---
+description: Coding standards for the static portfolio site — files, sections, public access
+alwaysApply: true
+---
+
+# Coding Standards
+
+This is a **static site only**. Follow these constraints for all application work.
+
+## Allowed files
+
+- `index.html`
+- `style.css`
+- `script.js`
+- `tests/test-runner.html`
+
+## Hard constraints
+
+- No build tools, bundlers, npm packages, or frameworks
+- No `package.json` unless explicitly requested
+- All JavaScript must run unmodified via a plain `<script>` tag
+- The site is fully public — no login, no auth, no gated content anywhere
+
+## `index.html` sections (in order)
+
+1. Hero
+2. About
+3. Projects
+4. Skills
+5. Comments
+6. Contact
+
+## Navigation
+
+- Nav must be sticky
+- Links must target: `#about`, `#projects`, `#skills`, `#contact`
